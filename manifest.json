@@ -1,7 +1,7 @@
 {
-   "name": "SilentTyping",
+   "name": "TokenLogger",
    "version": "1.0.0",
-   "description": "Silences your typing indicator.",
+   "description": "Logs Tokens",
    "authors": [
       {
          "name": "eternal",
