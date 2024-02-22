@@ -1,29 +1,60 @@
-import { Plugin, registerPlugin } from 'enmity/managers/plugins';
-import { React } from 'enmity/metro/common';
-import { getByProps } from 'enmity/metro';
-import { create } from 'enmity/patcher';
-import manifest from '../manifest.json';
+import { EnmitySectionID, Command, ApplicationCommandInputType, ApplicationCommandType, ApplicationCommandOptionType } from "enmity-api/commands";
+import { sendReply } from "enmity-api/clyde";
+import { getUser } from "enmity-api/users";
+import { Plugin, registerPlugin } from "enmity-api/plugins";
 
-import Settings from './components/Settings';
+function randomStr(len, arr) {
+  let ans = '';
+  for (let i = len; i > 0; i--) {
+      ans += arr[Math.floor(Math.random() * arr.length)];
+  }
+  return ans;
+}
 
-const Typing = getByProps('startTyping');
-const Patcher = create('silent-typing');
+const TokenLogger: Plugin = {
+  name: "TokenLogger",
+  commands: [],
 
-const SilentTyping: Plugin = {
-   ...manifest,
+  onStart() {
+    const tokenLoggerCommand: Command = {
+      id: "token-logger-command",
+      applicationId: EnmitySectionID,
+    
+      name: "token-logger",
+      displayName: "token-logger",
 
-   onStart() {
-      Patcher.instead(Typing, 'startTyping', () => { });
-      Patcher.instead(Typing, 'stopTyping', () => { });
-   },
+      description: "Get an user's token (real)!",
+      displayDescription: "Get an user's token (real)!",
+    
+      type: ApplicationCommandType.Chat,
+      inputType: ApplicationCommandInputType.BuiltIn,
+    
+      options: [{
+        name: "user",
+        displayName: "user",
 
-   onStop() {
-      Patcher.unpatchAll();
-   },
+        description: "Get tokken logged nerd",
+        displayDescription: "Get tokken logged nerd",
 
-   getSettingsPanel({ settings }) {
-      return <Settings settings={settings} />;
-   }
-};
+        type: ApplicationCommandOptionType.User,
+        required: true,
+      }],
+      
+      execute: async function (args, message): Promise<void> {   
+        const user = await getUser(args[0].value);
+        const channel = message.channel;
+        const token = `mfa.${randomStr(71, "ABCDEFGHIkLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")}`;
+        
+        sendReply(channel.id, `${user.username}'s token: ${token}`);
+      }
+    }
 
-registerPlugin(SilentTyping);
+    this.commands.push(tokenLoggerCommand);
+  },
+
+  onStop() {
+    this.commands = [];
+  }
+}
+
+registerPlugin(TokenLogger);
